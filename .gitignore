@@ -21,4 +21,7 @@ out/
 !**/.idea/
 !**/.gradle
 !**/build/
-！**/node_modules/
+/ggghost-admin-react/node_modules/
+/ggghost-admin-java/.gradle/
+/.idea/
+/ggghost-admin-java/.idea/
