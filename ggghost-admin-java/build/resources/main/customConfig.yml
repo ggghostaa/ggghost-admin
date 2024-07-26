@@ -1,7 +1,0 @@
-logging:
-  includePaths:
-    - /test
-    - /login
-  excludePaths:
-    - /test
-#    - /login
