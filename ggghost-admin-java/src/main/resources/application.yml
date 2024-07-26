@@ -2,9 +2,9 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://8.134.149.52:15432/blog
-    username: ggg_blog
-    password: Yq^^F74dIH9d$nK~SM~q
+    url: jdbc:postgresql://
+    username:
+    password:
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -22,12 +22,12 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   data:
     redis:
-      host: 8.134.149.52
-      port: 16379
-      password: Yq^^F74dIH9d$nK~SM~q
+      host:
+      port:
+      password:
       database: 0
       username: default
 token:
-  secret: Bzv9J88NUdgwAvKWi6s9h3ZbrXfd9D
+  secret:
   expiration: 6000
   refresh: 500
