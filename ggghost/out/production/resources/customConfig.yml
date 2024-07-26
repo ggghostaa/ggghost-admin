@@ -1,0 +1,6 @@
+logging:
+  includePaths:
+    - /test
+    - /login
+  excludePaths:
+#    - /login

@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.1'
+    id 'io.spring.dependency-management' version '1.1.5'
+}
+
+group = 'com.ggghost'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.12.5'
+    implementation('org.apache.shiro:shiro-spring:2.0.0:jakarta') { exclude group: 'org.apache.shiro', module: 'shiro-web' }
+    implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.14.0'
+    implementation 'org.apache.shiro:shiro-web:2.0.0:jakarta'
+    implementation group: 'org.lionsoul', name: 'ip2region', version: '2.7.0'
+    implementation group: 'eu.bitwalker', name: 'UserAgentUtils', version: '1.21'
+    implementation group: 'org.redisson', name: 'redisson-spring-boot-starter', version: '3.32.0'
+    runtimeOnly 'org.postgresql:postgresql'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+jar {
+    manifest {
+        attributes "ggghost-admin-java": 1.0,
+        'Main-Class': 'com.ggghost.GgghostAdminJavaApplication'
+    }
+}
