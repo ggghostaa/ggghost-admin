@@ -1,5 +1,6 @@
-package com.ggghost.framework.shiro;
+package com.ggghost.framework.shiro.credentialsMatcher;
 
+import com.ggghost.framework.shiro.JwtToken;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.credential.CredentialsMatcher;

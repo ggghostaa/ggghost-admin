@@ -1,4 +1,4 @@
-package com.ggghost.framework.shiro;
+package com.ggghost.framework.shiro.realm;
 
 import com.ggghost.framework.entity.SysPermission;
 import com.ggghost.framework.entity.SysRole;
@@ -23,8 +23,8 @@ import java.util.logging.Logger;
  *@Version: 1.0
  */
 @Component
-public class GRealm extends AuthorizingRealm {
-    private static final Logger logger = Logger.getLogger(GRealm.class.getName());
+public class LoginRealm extends AuthorizingRealm {
+    private static final Logger logger = Logger.getLogger(LoginRealm.class.getName());
     @Autowired
     private ISysUserService sysUserService;
 
@@ -35,7 +35,6 @@ public class GRealm extends AuthorizingRealm {
      */
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        logger.info("授权管理");
         SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
         SysUser user = (SysUser) principalCollection.getPrimaryPrincipal();
         List<SysRole> sysRoleList = user.getSysRoleList();
@@ -56,12 +55,11 @@ public class GRealm extends AuthorizingRealm {
      */
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
-        logger.info("认证管理");
         UsernamePasswordToken upToken = (UsernamePasswordToken)authenticationToken;
         SysUser user = sysUserService.findUserByUsername(upToken.getUsername());
         if (user == null) {
             return null;
         }
-        return new SimpleAuthenticationInfo(user, user.getPassword(), ByteSource.Util.bytes(user.getSalt()), this.getName());
+        return new SimpleAuthenticationInfo(user, user.getPassword(), this.getName());
     }
 }

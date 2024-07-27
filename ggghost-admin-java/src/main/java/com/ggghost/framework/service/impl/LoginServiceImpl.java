@@ -69,7 +69,6 @@ public class LoginServiceImpl implements ILoginService {
         } catch (AuthenticationException e) {
             throw new UserPasswordNotMatcherException();
         } catch (Exception e) {
-
             throw new RuntimeException(e);
         }
     }

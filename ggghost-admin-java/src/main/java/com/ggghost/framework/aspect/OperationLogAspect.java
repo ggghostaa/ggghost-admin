@@ -41,7 +41,6 @@ public class OperationLogAspect {
         try {
             proceed = joinPoint.proceed();
         } catch (Throwable e) {
-            e.printStackTrace();
             throw e;
         }
         return proceed;

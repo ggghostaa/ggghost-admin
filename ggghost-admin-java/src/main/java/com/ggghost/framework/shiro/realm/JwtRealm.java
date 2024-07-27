@@ -1,4 +1,4 @@
-package com.ggghost.framework.shiro;
+package com.ggghost.framework.shiro.realm;
 
 import com.ggghost.framework.constant.RedisConstant;
 import com.ggghost.framework.dto.LoginUser;
@@ -8,6 +8,7 @@ import com.ggghost.framework.entity.SysUser;
 import com.ggghost.framework.exception.user.UserAuthenticationException;
 import com.ggghost.framework.service.ISysUserService;
 import com.ggghost.framework.service.impl.RedisService;
+import com.ggghost.framework.shiro.JwtToken;
 import com.ggghost.framework.utlis.JwtUtils;
 import io.jsonwebtoken.Claims;
 import org.apache.shiro.authc.AuthenticationException;
@@ -78,30 +79,4 @@ public class JwtRealm extends AuthorizingRealm {
 
         return new SimpleAuthenticationInfo(user, token, getName());
     }
-
-    /**
-     * 刷新token
-     * @param token
-     * @param userAgent 用户特征
-     * @return
-     */
-    private String refreshToken(String token, String userAgent) {
-        LoginUser loginUser = redisService.<LoginUser>get(RedisConstant.JWT_LOGIN_USER + userAgent + token);
-
-        if (loginUser == null) {
-            //抛出重新登录异常
-            throw new UserAuthenticationException();
-        }
-        if (token.equals(loginUser.getToken())) {
-//            String newToken = jwtUtils.encoding(loginUser);
-            String newToken = "";
-            loginUser.setToken(newToken);
-            redisService.put(RedisConstant.JWT_LOGIN_USER + userAgent + token, loginUser, Duration.ofSeconds(30));
-            redisService.put(RedisConstant.JWT_LOGIN_USER + userAgent + newToken, loginUser, Duration.ofDays(7));
-            return newToken;
-        } else {//token已刷新
-            return loginUser.getToken();
-        }
-    }
-
 }

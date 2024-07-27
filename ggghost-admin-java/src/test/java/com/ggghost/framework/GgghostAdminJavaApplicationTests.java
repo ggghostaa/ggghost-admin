@@ -1,31 +1,17 @@
 package com.ggghost.framework;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.ggghost.framework.entity.SysRole;
-import com.ggghost.framework.entity.SysUser;
-import com.ggghost.framework.password.BCryptPasswordEncoder;
 import com.ggghost.framework.service.impl.RedisService;
 import com.ggghost.framework.utlis.JwtUtils;
-import jakarta.annotation.Resource;
+import com.ggghost.framework.utlis.bcrypt.BCryptPasswordEncoder;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.lang.util.ByteSource;
 import org.apache.shiro.subject.Subject;
 import org.junit.jupiter.api.Test;
-import org.redisson.api.RBucket;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
-import org.redisson.codec.JsonJacksonCodec;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.util.AntPathMatcher;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
 class GgghostAdminJavaApplicationTests {
@@ -36,7 +22,8 @@ class GgghostAdminJavaApplicationTests {
 
     @Test
     void lock() {
-        jwtUtils.a();
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+        System.out.println(bCryptPasswordEncoder.encode("123456"));
     }
 
     @Test

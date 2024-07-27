@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ggghost.framework.password;
+package com.ggghost.framework.utlis.bcrypt;
 
 /**
  * Service interface for encoding passwords.

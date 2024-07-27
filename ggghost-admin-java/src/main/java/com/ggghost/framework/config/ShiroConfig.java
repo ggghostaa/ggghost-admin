@@ -1,6 +1,10 @@
 package com.ggghost.framework.config;
 
-import com.ggghost.framework.shiro.*;
+import com.ggghost.framework.shiro.filter.JwtFilter;
+import com.ggghost.framework.shiro.credentialsMatcher.BCryptCredentialsMatcher;
+import com.ggghost.framework.shiro.credentialsMatcher.JwtCredentialsMatcher;
+import com.ggghost.framework.shiro.realm.LoginRealm;
+import com.ggghost.framework.shiro.realm.JwtRealm;
 import jakarta.servlet.Filter;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.mgt.DefaultSecurityManager;
@@ -83,7 +87,7 @@ public class ShiroConfig {
      * @return
      */
     @Bean("securityManager")
-    public DefaultWebSecurityManager securityManager(GRealm realm, JwtRealm jwtRealm) {
+    public DefaultWebSecurityManager securityManager(LoginRealm realm, JwtRealm jwtRealm) {
         ArrayList<Realm> realms = new ArrayList<>();
         realms.add(realm);
         realms.add(jwtRealm);
@@ -104,20 +108,20 @@ public class ShiroConfig {
      * @return
      */
     @Bean
-    public GCredentialsMatcher gCredentialsMatcher() {
-        return new GCredentialsMatcher();
+    public BCryptCredentialsMatcher gCredentialsMatcher() {
+        return new BCryptCredentialsMatcher();
     }
 
     /**
      * 配置Realm域，注入密码比较器
-     * @param gCredentialsMatcher
+     * @param BCryptCredentialsMatcher
      * @return
      */
     @Bean
-    public GRealm realm(GCredentialsMatcher gCredentialsMatcher) {
-        GRealm gRealm = new GRealm();
-        gRealm.setCredentialsMatcher(gCredentialsMatcher);
-        return gRealm;
+    public LoginRealm realm(BCryptCredentialsMatcher BCryptCredentialsMatcher) {
+        LoginRealm loginRealm = new LoginRealm();
+        loginRealm.setCredentialsMatcher(BCryptCredentialsMatcher);
+        return loginRealm;
     }
 
     @Bean

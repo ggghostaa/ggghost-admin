@@ -1,4 +1,4 @@
-package com.ggghost.framework.shiro;
+package com.ggghost.framework.shiro.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ggghost.framework.constant.RedisConstant;
@@ -8,6 +8,7 @@ import com.ggghost.framework.enums.ExceptionEnum;
 import com.ggghost.framework.exception.user.UserAuthenticationException;
 import com.ggghost.framework.service.ILoginService;
 import com.ggghost.framework.service.impl.RedisService;
+import com.ggghost.framework.shiro.JwtToken;
 import com.ggghost.framework.utlis.IpAddrUtils;
 import com.ggghost.framework.utlis.JwtUtils;
 import com.ggghost.framework.utlis.SpringBeanUtils;
@@ -55,7 +56,6 @@ public class JwtFilter extends AuthenticatingFilter {
         if (ObjectUtils.isEmpty(token)) {
             throw new UserAuthenticationException();
         }
-        log.info("create token");
         return new JwtToken(token);
     }
 
@@ -77,12 +77,11 @@ public class JwtFilter extends AuthenticatingFilter {
      */
     @Override
     protected boolean onAccessDenied(ServletRequest servletRequest, ServletResponse servletResponse) throws Exception {
-
-        log.info("onAccessDenied");
         if (!validToken(servletRequest, servletResponse)) {
-            onLoginFail(servletResponse);
+            log.error("token valid failed");
             return false;
         }
+        log.info("token valid success");
         return executeLogin(servletRequest, servletResponse);
     }
 
@@ -107,15 +106,14 @@ public class JwtFilter extends AuthenticatingFilter {
             }
 
             LoginUser user = redisService.<LoginUser>get(RedisConstant.JWT + x_token);
-            if (user == null) return false;
+            if (user == null) {
+                return false;
+            }
 
             RList<String> rList = redisService.getRList(RedisConstant.JWT_USER + userAgent.getId() + user.getId());
             //同一客户端多请求并发下,一个请求更新了token,但其它请求未更新token,返回最新token
             if (rList.size() > 1 && x_token.equals(rList.getLast())) {
                 onLoginToken(servletResponse, rList.getFirst());
-                Map data = new HashMap<>();
-                data.put("x-token", rList.getFirst());
-                onLoginSuccess(servletResponse, data);
                 return false;
             }
 
@@ -130,21 +128,6 @@ public class JwtFilter extends AuthenticatingFilter {
             log.error("token valid failed!\n\r {}", e.getMessage());
             return false;
         }
-    }
-
-    /**
-     * 校验失败执行方法
-     *
-     * @param response
-     * @throws IOException
-     */
-    private void onLoginFail(ServletResponse response) throws IOException {
-        HttpServletResponse httpServletResponse = (HttpServletResponse) response;
-        httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        ResponseInfo<Object> data = ResponseInfo.fail(ExceptionEnum.NOT_LOGIN_ERROR);
-        httpServletResponse.setContentType("application/json");
-        httpServletResponse.setCharacterEncoding("UTF-8");
-        httpServletResponse.getWriter().write(objectMapper.writeValueAsString(data));
     }
 
     /**

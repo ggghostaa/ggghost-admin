@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.ggghost.framework.password;
+package com.ggghost.framework.utlis.bcrypt;
 
 import java.security.SecureRandom;
 import java.util.regex.Matcher;
