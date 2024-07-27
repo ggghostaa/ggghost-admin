@@ -5,15 +5,11 @@ import com.ggghost.framework.dto.LoginUser;
 import com.ggghost.framework.entity.SysPermission;
 import com.ggghost.framework.entity.SysRole;
 import com.ggghost.framework.entity.SysUser;
-import com.ggghost.framework.exception.BaseException;
 import com.ggghost.framework.exception.user.UserAuthenticationException;
-import com.ggghost.framework.exception.user.UserNotFoundException;
 import com.ggghost.framework.service.ISysUserService;
 import com.ggghost.framework.service.impl.RedisService;
-import com.ggghost.framework.utlis.IpAddrUtils;
 import com.ggghost.framework.utlis.JwtUtils;
-import eu.bitwalker.useragentutils.UserAgent;
-import jakarta.servlet.http.HttpServletRequest;
+import io.jsonwebtoken.Claims;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -22,15 +18,10 @@ import org.apache.shiro.authz.AuthorizationInfo;
 import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
-import org.apache.tomcat.util.http.fileupload.servlet.ServletRequestContext;
-import org.redisson.api.RLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.Duration;
 
@@ -78,36 +69,14 @@ public class JwtRealm extends AuthorizingRealm {
     @Override
     protected AuthenticationInfo doGetAuthenticationInfo(AuthenticationToken authenticationToken) throws AuthenticationException {
         String token = (String) authenticationToken.getCredentials();
-        //判断token是否需要刷新
-        boolean refresh = false;
-        try {
-            refresh = jwtUtils.isRefresh(token);
-        } catch (Exception e) {
-            //token不合法
-            throw new UserAuthenticationException();
+        LoginUser user = redisService.<LoginUser>get(RedisConstant.JWT + token);
+        if (user == null) {
+            Claims claims = jwtUtils.decoding(token);
+            SysUser sysUser = userService.findUserByUsername((String) claims.get("username"));
+            if (sysUser != null) user = new LoginUser(sysUser);
         }
 
-        if (refresh) {//刷新token
-            RLock rLock = redisService.getRLock(RedisConstant.LOCK + token);
-            try {
-                if (rLock.tryLock()) {
-                    HttpServletRequest request = ((ServletRequestAttributes)
-                            RequestContextHolder.getRequestAttributes()).getRequest();
-                    String userAgent = IpAddrUtils.getUserAgentKey(request);
-                    token = refreshToken(token, userAgent);
-                }
-            } catch (Exception e) {
-                log.error("token refresh error\n\r {}", e.getMessage());
-                throw new UserAuthenticationException();
-            } finally {
-                rLock.unlock();
-            }
-        }
-        String username = jwtUtils.getClaimFiled(token, "username");
-        SysUser user = userService.findUserByUsername(username);
-        System.out.println(this.getName());
-        SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(user, token, getName());
-        return simpleAuthenticationInfo;
+        return new SimpleAuthenticationInfo(user, token, getName());
     }
 
     /**

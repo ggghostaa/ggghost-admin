@@ -5,7 +5,6 @@ import org.redisson.api.*;
 import org.redisson.client.codec.StringCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -19,8 +18,6 @@ import java.time.Duration;
 @Service("redisService")
 public class RedisService {
     private static final Logger log = LoggerFactory.getLogger(RedisService.class);
-    @Resource
-    private RedisTemplate<String, Object> redisTemplate;
     @Resource
     private RedissonClient redissonClient;
     /**

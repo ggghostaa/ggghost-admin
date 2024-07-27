@@ -1,23 +1,32 @@
 package com.ggghost.framework.shiro;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ggghost.framework.constant.RedisConstant;
+import com.ggghost.framework.dto.LoginUser;
 import com.ggghost.framework.dto.ResponseInfo;
 import com.ggghost.framework.enums.ExceptionEnum;
 import com.ggghost.framework.exception.user.UserAuthenticationException;
+import com.ggghost.framework.service.ILoginService;
+import com.ggghost.framework.service.impl.RedisService;
+import com.ggghost.framework.utlis.IpAddrUtils;
+import com.ggghost.framework.utlis.JwtUtils;
+import com.ggghost.framework.utlis.SpringBeanUtils;
+import eu.bitwalker.useragentutils.UserAgent;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
+import org.redisson.api.RList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author: ggghost
@@ -25,15 +34,16 @@ import java.io.IOException;
  * @Description: jwt拦截器
  * @Version: 1.0
  */
-@Component
 public class JwtFilter extends AuthenticatingFilter {
     private static final Logger log = LoggerFactory.getLogger(JwtFilter.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static final String X_TOKEN = "X-Token";
+    private static final String X_TOKEN = "x-token";
+
 
     /**
      * 创建token
+     *
      * @param servletRequest
      * @param servletResponse
      * @return
@@ -45,6 +55,7 @@ public class JwtFilter extends AuthenticatingFilter {
         if (ObjectUtils.isEmpty(token)) {
             throw new UserAuthenticationException();
         }
+        log.info("create token");
         return new JwtToken(token);
     }
 
@@ -55,36 +66,78 @@ public class JwtFilter extends AuthenticatingFilter {
     protected boolean isAccessAllowed(ServletRequest servletRequest, ServletResponse servletResponse, Object o) {
         return ((HttpServletRequest) servletRequest).getMethod().equals(RequestMethod.OPTIONS.name());
     }
+
     /**
      * onAccessDenied()是没有携带JwtToken的时候进行账号密码登录，登录成功允许访问，登录失败拒绝访问
+     *
      * @param servletRequest
      * @param servletResponse
-     * @throws Exception
      * @return 返回结果为true表明登录通过
+     * @throws Exception
      */
     @Override
     protected boolean onAccessDenied(ServletRequest servletRequest, ServletResponse servletResponse) throws Exception {
+
+        log.info("onAccessDenied");
+        if (!validToken(servletRequest, servletResponse)) {
+            onLoginFail(servletResponse);
+            return false;
+        }
         return executeLogin(servletRequest, servletResponse);
-//        log.info("onAccessDenied");
-//        HttpServletRequest request = (HttpServletRequest) servletRequest;
-//        String token = request.getHeader("x-token");
-//        if (token == null) {
-//            // 在这里处理token不存在的情况，例如返回HTTP 401 Unauthorized
-//            onLoginFail(servletResponse);
-//            return false;
-//        }
-//        JwtToken jwtToken = new JwtToken(token);
-//        try {
-//            getSubject(servletRequest, servletResponse).login(jwtToken);
-//        } catch (AuthenticationException e) {
-//            log.error("Subject login error:", e);
-//            onLoginFail(servletResponse);
-//            return false;
-//        }
-//        return true;
     }
 
-    //登录失败要执行的方法
+    /**
+     * 校验token
+     *
+     * @param servletRequest
+     * @param servletResponse
+     * @return
+     */
+    private boolean validToken(ServletRequest servletRequest, ServletResponse servletResponse) {
+        try {
+            //注入bean
+            RedisService redisService = SpringBeanUtils.getBean(RedisService.class);
+            JwtUtils jwtUtils = SpringBeanUtils.getBean(JwtUtils.class);
+            ILoginService loginService = SpringBeanUtils.getBean(ILoginService.class);
+            //获取用户特征
+            UserAgent userAgent = IpAddrUtils.getUserAgent();
+            String x_token = getToken((HttpServletRequest) servletRequest);
+            if (x_token == null) {
+                throw new UserAuthenticationException();
+            }
+
+            LoginUser user = redisService.<LoginUser>get(RedisConstant.JWT + x_token);
+            if (user == null) return false;
+
+            RList<String> rList = redisService.getRList(RedisConstant.JWT_USER + userAgent.getId() + user.getId());
+            //同一客户端多请求并发下,一个请求更新了token,但其它请求未更新token,返回最新token
+            if (rList.size() > 1 && x_token.equals(rList.getLast())) {
+                onLoginToken(servletResponse, rList.getFirst());
+                Map data = new HashMap<>();
+                data.put("x-token", rList.getFirst());
+                onLoginSuccess(servletResponse, data);
+                return false;
+            }
+
+            //刷新token
+            String token = jwtUtils.getClaimFiled(x_token, "token");
+            if (jwtUtils.isRefresh(token)) {
+                onLoginToken(servletResponse, loginService.createToken(user));
+                return false;
+            }
+            return true;
+        } catch (IOException e) {
+            log.error("token valid failed!\n\r {}", e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 校验失败执行方法
+     *
+     * @param response
+     * @throws IOException
+     */
     private void onLoginFail(ServletResponse response) throws IOException {
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
         httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -93,6 +146,41 @@ public class JwtFilter extends AuthenticatingFilter {
         httpServletResponse.setCharacterEncoding("UTF-8");
         httpServletResponse.getWriter().write(objectMapper.writeValueAsString(data));
     }
+
+    /**
+     * 登录成功执行方法
+     *
+     * @param response
+     * @param data
+     * @throws IOException
+     */
+    private void onLoginSuccess(ServletResponse response, Object data) throws IOException {
+        HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+        ResponseInfo<Object> success = ResponseInfo.success(data);
+        httpServletResponse.setContentType("application/json");
+        httpServletResponse.setCharacterEncoding("UTF-8");
+        httpServletResponse.getWriter().write(objectMapper.writeValueAsString(success));
+    }
+
+    /**
+     * 返回刷新token
+     *
+     * @param response
+     * @param token
+     * @throws IOException
+     */
+    private void onLoginToken(ServletResponse response, String token) throws IOException {
+        Map data = new HashMap<>();
+        data.put("x-token", token);
+        HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+        ResponseInfo<Object> success = ResponseInfo.success(data);
+        httpServletResponse.setContentType("application/json");
+        httpServletResponse.setCharacterEncoding("UTF-8");
+        httpServletResponse.getWriter().write(objectMapper.writeValueAsString(success));
+    }
+
     /**
      * 对跨域访问提供支持
      *
@@ -120,12 +208,13 @@ public class JwtFilter extends AuthenticatingFilter {
      * 获取token
      * 优先从header获取
      * 如果没有，则从parameter获取
+     *
      * @param request request
      * @return token
      */
-    private String getToken(HttpServletRequest request){
+    private String getToken(HttpServletRequest request) {
         String token = request.getHeader(X_TOKEN);
-        if(ObjectUtils.isEmpty(token)){
+        if (ObjectUtils.isEmpty(token)) {
             token = request.getParameter(X_TOKEN);
         }
         return token;

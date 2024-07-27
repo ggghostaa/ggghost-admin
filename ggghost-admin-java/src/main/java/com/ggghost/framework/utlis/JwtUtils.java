@@ -1,12 +1,9 @@
 package com.ggghost.framework.utlis;
 
 import com.ggghost.framework.dto.LoginUser;
-import com.ggghost.framework.entity.SysUser;
 import io.jsonwebtoken.*;
-import jdk.swing.interop.SwingInterOpUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -29,11 +26,12 @@ public class JwtUtils {
 
     private String SECRET = "Bzv9J88NUdgwAvKWi6s9h3ZbrXfd9D";
 
-    private long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
+    public static long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
 
-    private long REFRESH_TIME = 1000 * 30 * 60 * 12;
+    public static long REFRESH_TIME = 1000 * 30 * 60 * 12;
 
-    private final String issuer = "ggghost";
+    private static final String issuer = "ggghost";
+    public static final String X_TOKEN = "X-Token";
 
     private SecretKey secretKey;
 

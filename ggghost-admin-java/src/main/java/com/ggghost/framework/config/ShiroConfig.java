@@ -3,7 +3,6 @@ package com.ggghost.framework.config;
 import com.ggghost.framework.shiro.*;
 import jakarta.servlet.Filter;
 import org.apache.shiro.SecurityUtils;
-import org.apache.shiro.authc.credential.CredentialsMatcher;
 import org.apache.shiro.mgt.DefaultSecurityManager;
 import org.apache.shiro.mgt.DefaultSessionStorageEvaluator;
 import org.apache.shiro.mgt.DefaultSubjectDAO;
@@ -29,6 +28,44 @@ import java.util.Map;
  */
 @Configuration
 public class ShiroConfig {
+
+    /**
+     * 配置拦截路径和放心路径
+     * @param securityManager
+     * @return
+     */
+    @Bean("shiroFilterFactoryBean")
+    public ShiroFilterFactoryBean filterFactoryBean(DefaultSecurityManager securityManager) {
+        // shiro过滤器工厂类
+        ShiroFilterFactoryBean shiroFilterFactoryBean  = new ShiroFilterFactoryBean();
+
+        // 设置 SecurityManager
+        shiroFilterFactoryBean.setSecurityManager(securityManager);
+        /**
+         * 注册自定义过滤器
+         */
+        Map<String, Filter> filterMap = new LinkedHashMap<>();
+        filterMap.put("jwtFilter", new JwtFilter());
+        shiroFilterFactoryBean.setFilters(filterMap);
+
+        //拦截器----Map集合
+        Map<String,String> filterChainDefinitionMap = new LinkedHashMap<String,String>();
+
+        //配置退出 过滤器,其中的具体的退出代码Shiro已经替我们实现了
+        filterChainDefinitionMap.put("/login", "anon");
+        filterChainDefinitionMap.put("/favicon.ico", "anon");
+        //   /** 匹配所有的路径
+        //  通过Map集合组成了一个拦截器链 ，自顶向下过滤，一旦匹配，则不再执行下面的过滤
+        //  如果下面的定义与上面冲突，那按照了谁先定义谁说了算
+        //  /** 一定要配置在最后
+        filterChainDefinitionMap.put("/**", "jwtFilter");
+
+        // 将拦截器链设置到shiro中
+        shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
+
+        return shiroFilterFactoryBean;
+    }
+
 
     /**
      * 设置securityManager
@@ -95,44 +132,7 @@ public class ShiroConfig {
         return new JwtCredentialsMatcher();
     }
 
-    /**
-     * 配置拦截路径和放心路径
-     * @param securityManager
-     * @return
-     */
-//    @ConditionalOnMissingBean
-    @Bean("shiroFilterFactoryBean")
-    public ShiroFilterFactoryBean filterFactoryBean(DefaultSecurityManager securityManager) {
-        // shiro过滤器工厂类
-        ShiroFilterFactoryBean shiroFilterFactoryBean  = new ShiroFilterFactoryBean();
 
-        // 设置 SecurityManager
-        shiroFilterFactoryBean.setSecurityManager(securityManager);
-        /**
-         * 注册自定义过滤器
-         */
-        Map<String, Filter> filterMap = new LinkedHashMap<>();
-        filterMap.put("jwt", new JwtFilter());
-        shiroFilterFactoryBean.setFilters(filterMap);
-
-        //拦截器----Map集合
-        Map<String,String> filterChainDefinitionMap = new LinkedHashMap<String,String>();
-
-        //配置退出 过滤器,其中的具体的退出代码Shiro已经替我们实现了
-        filterChainDefinitionMap.put("/login", "anon");
-        filterChainDefinitionMap.put("/test", "anon");
-        filterChainDefinitionMap.put("/favicon.ico", "anon");
-        //   /** 匹配所有的路径
-        //  通过Map集合组成了一个拦截器链 ，自顶向下过滤，一旦匹配，则不再执行下面的过滤
-        //  如果下面的定义与上面冲突，那按照了谁先定义谁说了算
-        //  /** 一定要配置在最后
-        filterChainDefinitionMap.put("/**", "jwt");
-
-        // 将拦截器链设置到shiro中
-        shiroFilterFactoryBean.setFilterChainDefinitionMap(filterChainDefinitionMap);
-
-        return shiroFilterFactoryBean;
-    }
 
     /**
      * 开启shiro aop注解支持

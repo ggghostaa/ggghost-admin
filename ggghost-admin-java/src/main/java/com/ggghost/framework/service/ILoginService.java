@@ -24,4 +24,12 @@ public interface ILoginService {
      * @return
      */
     ResponseInfo register(SysUser sysUser);
+
+    /**
+     * 创建token
+     * @param user
+     * @return
+     */
+    String createToken(LoginUser user);
+
 }

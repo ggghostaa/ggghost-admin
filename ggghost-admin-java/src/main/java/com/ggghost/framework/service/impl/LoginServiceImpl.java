@@ -11,29 +11,21 @@ import com.ggghost.framework.service.ISysUserService;
 import com.ggghost.framework.utlis.IpAddrUtils;
 import com.ggghost.framework.utlis.JwtUtils;
 import eu.bitwalker.useragentutils.UserAgent;
-import jakarta.servlet.http.HttpServletRequest;
-import org.apache.commons.beanutils.BeanUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.subject.Subject;
 import org.redisson.api.RList;
 import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.UUID;
+import java.util.concurrent.Executors;
 
 /**
  * @Author: ggghost
@@ -68,29 +60,11 @@ public class LoginServiceImpl implements ILoginService {
             HashMap<String, Object> result = new HashMap<>();
             subject.login(new UsernamePasswordToken(loginUser.getUsername(), loginUser.getPassword()));
             SysUser sysUser = (SysUser) subject.getPrincipal();
-
-            //更新最后登录时间
-            transactionTemplate.execute((status)->{
-                sysUser.setLastLoginTime(new Date());
-                sysUserRepository.save(sysUser);
-               return null;
-            });
-            sysUser.setSalt(null);
-            sysUser.setPassword(null);
+            //增加登录日志，更新最后登录时间
+            addLoginLog(sysUser);
             LoginUser user = new LoginUser(sysUser);
             result.put("user", user);
-            //生成token,二次加密，loginId做key
-            String tokenSeq = sysUserRepository.getUserTokenSeq();
-            String token = jwtUtils.generateToken(new LoginUser(sysUser));
-            String loginId = UUID.randomUUID().toString() + tokenSeq;
-            String xToken = jwtUtils.generateToken(token, loginId);
-            //获取用户特征
-            UserAgent userAgent = IpAddrUtils.getUserAgent();
-            redisService.putString(userAgent.getId() + loginId, xToken);
-
-            //维护一个token list，删除重复登录的redis token
-
-
+            result.put("x-token", createToken(new LoginUser(sysUser)));
             return ResponseInfo.success(result, "登录成功");
         } catch (AuthenticationException e) {
             throw new UserPasswordNotMatcherException();
@@ -100,8 +74,61 @@ public class LoginServiceImpl implements ILoginService {
         }
     }
 
+
+
     @Override
     public ResponseInfo register(SysUser sysUser) {
         throw new UserPasswordNotMatcherException();
+    }
+
+    /**
+     * 添加登录日志
+     * @param sysUser
+     */
+    private void addLoginLog(SysUser sysUser) {
+    }
+
+    /**
+     * 生成token
+     * 二次加密
+     * @param user
+     * @return
+     */
+    public String createToken(LoginUser user) {
+        //获取用户特征
+        UserAgent userAgent = IpAddrUtils.getUserAgent();
+        //生成token,二次加密，loginId做key
+        HashMap<String, Object> claims = new HashMap<>();
+        claims.put("id", user.getId());
+        claims.put("username", user.getUsername());
+        String encoding = jwtUtils.encoding(claims, JwtUtils.EXPIRATION_TIME);
+        claims = new HashMap<>();
+        claims.put("token", encoding);
+        String x_token = jwtUtils.encoding(claims);
+        //存入redis
+        redisService.put(RedisConstant.JWT + x_token, user, Duration.ofDays(7));
+        LoginUser user1 = redisService.<LoginUser>get(RedisConstant.JWT + x_token);
+
+        //异步线程维护一个用户登录token表，释放多次登录redis空间
+        Executors.newVirtualThreadPerTaskExecutor().execute(()->{
+            String key = userAgent.getId() + user.getId();
+            RList<String> rList = redisService.getRList(RedisConstant.JWT_USER + key);
+            RLock rLock = redisService.getRLock(RedisConstant.LOCK + key);
+            //加锁更新
+            try {
+                if (rLock.tryLock()) {
+                    rList.addFirst(x_token);
+                    while (rList.size() > 2) {
+                        redisService.remove(RedisConstant.JWT + rList.getLast());
+                        rList.removeLast();
+                    }
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                rLock.unlock();
+            }
+        });
+        return x_token;
     }
 }
