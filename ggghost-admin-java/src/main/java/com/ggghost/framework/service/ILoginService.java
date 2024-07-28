@@ -23,7 +23,7 @@ public interface ILoginService {
      * @param sysUser
      * @return
      */
-    ResponseInfo register(SysUser sysUser);
+    ResponseInfo register(LoginUser user);
 
     /**
      * 创建token

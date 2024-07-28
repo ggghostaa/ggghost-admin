@@ -27,6 +27,7 @@ dependencies {
     implementation group: 'org.lionsoul', name: 'ip2region', version: '2.7.0'
     implementation group: 'eu.bitwalker', name: 'UserAgentUtils', version: '1.21'
     implementation group: 'org.redisson', name: 'redisson-spring-boot-starter', version: '3.32.0'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     runtimeOnly 'org.postgresql:postgresql'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

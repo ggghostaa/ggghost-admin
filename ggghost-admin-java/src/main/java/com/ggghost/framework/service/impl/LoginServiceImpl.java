@@ -19,8 +19,11 @@ import org.redisson.api.RList;
 import org.redisson.api.RLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Duration;
@@ -65,7 +68,7 @@ public class LoginServiceImpl implements ILoginService {
             LoginUser user = new LoginUser(sysUser);
             result.put("user", user);
             result.put("x-token", createToken(new LoginUser(sysUser)));
-            return ResponseInfo.success(result, "登录成功");
+            return ResponseInfo.success(result, "login success!");
         } catch (AuthenticationException e) {
             throw new UserPasswordNotMatcherException();
         } catch (Exception e) {
@@ -75,9 +78,21 @@ public class LoginServiceImpl implements ILoginService {
 
 
 
+    @Transactional
     @Override
-    public ResponseInfo register(SysUser sysUser) {
-        throw new UserPasswordNotMatcherException();
+    public ResponseInfo register(LoginUser user) {
+        try {
+            SysUser sysUser = sysUserRepository.findUserByUsername(user.getUsername());
+            if (sysUser != null) {
+                return ResponseInfo.fail("user is exist!");
+            }
+            sysUser = new SysUser();
+            BeanUtils.copyProperties(user, sysUser);
+            sysUserRepository.save(sysUser);
+            return ResponseInfo.success("register success!");
+        } catch (BeansException e) {
+            return ResponseInfo.fail("register success!");
+        }
     }
 
     /**

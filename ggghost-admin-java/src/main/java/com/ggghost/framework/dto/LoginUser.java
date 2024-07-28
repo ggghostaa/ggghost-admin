@@ -1,7 +1,10 @@
 package com.ggghost.framework.dto;
 
 import com.ggghost.framework.entity.SysUser;
+import com.ggghost.framework.valid.ValidGroup;
 import jakarta.persistence.Column;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.apache.commons.beanutils.BeanUtils;
 
 import java.io.Serializable;
@@ -14,7 +17,11 @@ import java.io.Serializable;
  */
 public class LoginUser implements Serializable {
     private String id;
+    @Pattern(regexp = "^[a-zA-Z0-9]{1,20}$", message = "用户名不能包含特殊字符，不能超过20个字符", groups = {ValidGroup.register.class})
+    @NotBlank(message = "用户名不能为空")
     private String username;//用户名
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$", message = "密码至少包含8个字符。包括大写字母、小写字母、数字和特殊字符中的至少三种", groups = {ValidGroup.register.class})
+    @NotBlank(message = "密码不能为空")
     private String password;//密码
     private String email;//邮箱
     private String realName;//别称
