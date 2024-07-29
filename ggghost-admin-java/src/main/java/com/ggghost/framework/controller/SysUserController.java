@@ -26,7 +26,7 @@ public class SysUserController {
             SysUser sysUser = new SysUser();
             sysUser.setUsername("test" + i +1);
             sysUser.setPassword("123456");
-            sysUser.setStatus("1");
+            sysUser.setStatus(1);
             sysUserRepository.save(sysUser);
         }
         return "sys_user/add";

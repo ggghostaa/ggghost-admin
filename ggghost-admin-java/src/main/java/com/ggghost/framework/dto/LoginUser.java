@@ -26,7 +26,7 @@ public class LoginUser implements Serializable {
     private String email;//邮箱
     private String realName;//别称
     private String phone;//手机
-    private String status;//状态
+    private int status;//状态
     private String remark;//备注
     private String token;//token
     private String code;
@@ -85,11 +85,11 @@ public class LoginUser implements Serializable {
         this.phone = phone;
     }
 
-    public String getStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 

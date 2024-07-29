@@ -27,9 +27,6 @@ public class ApiLog extends AbstractEntity {
     private String ipInfo;//归属地
     private String errMsg;//错误信息
     private String statusCode;//状态代码
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sys_user_id")
-    private SysUser sysUser;//请求用户
 
     public String getApiUri() {
         return apiUri;
@@ -143,11 +140,4 @@ public class ApiLog extends AbstractEntity {
         this.statusCode = statusCode;
     }
 
-    public SysUser getSysUser() {
-        return sysUser;
-    }
-
-    public void setSysUser(SysUser sysUser) {
-        this.sysUser = sysUser;
-    }
 }

@@ -22,6 +22,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @Author: ggghost
@@ -166,7 +167,13 @@ public class IpAddrUtils {
         return false;
     }
 
-
+    /**
+     * 获取 IP 地址
+     */
+    public static String getIpAddress() {
+        HttpServletRequest request;
+        return getIpAddress(((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest());
+    }
     /**
      * 获取请求的 IP 地址
      */

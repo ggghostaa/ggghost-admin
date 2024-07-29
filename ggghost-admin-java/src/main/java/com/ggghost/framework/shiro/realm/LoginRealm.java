@@ -3,6 +3,8 @@ package com.ggghost.framework.shiro.realm;
 import com.ggghost.framework.entity.SysPermission;
 import com.ggghost.framework.entity.SysRole;
 import com.ggghost.framework.entity.SysUser;
+import com.ggghost.framework.exception.BaseException;
+import com.ggghost.framework.exception.user.UserAuthenticationException;
 import com.ggghost.framework.service.ISysUserService;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
@@ -59,6 +61,9 @@ public class LoginRealm extends AuthorizingRealm {
         SysUser user = sysUserService.findUserByUsername(upToken.getUsername());
         if (user == null) {
             return null;
+        }
+        if (0 == user.getStatus()) {
+            throw new BaseException("该账户已禁用");
         }
         return new SimpleAuthenticationInfo(user, user.getPassword(), this.getName());
     }

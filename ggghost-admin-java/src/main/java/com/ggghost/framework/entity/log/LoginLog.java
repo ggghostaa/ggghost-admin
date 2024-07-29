@@ -12,14 +12,12 @@ import java.time.LocalDateTime;
 public class LoginLog extends AbstractEntity {
     @Column(length = 30)
     private String username;
-    @Column(columnDefinition = "TEXT")
-    private String requestParams;//请求参数
-    private LocalDateTime beginTime;//请求时间
-    private LocalDateTime endTime;//响应时间
-    private double duration;//消耗时间
     private String ip;//ip
     private String userAgent;//客户端
-    private String statusCode;//登陆结果
+    private boolean success;//登陆结果
+    private String deviceInfo;//设备信息
+    private String additionalInfo;//附加信息
+    private LocalDateTime loginTime;//登录时间
 
     public String getUsername() {
         return username;
@@ -27,38 +25,6 @@ public class LoginLog extends AbstractEntity {
 
     public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getRequestParams() {
-        return requestParams;
-    }
-
-    public void setRequestParams(String requestParams) {
-        this.requestParams = requestParams;
-    }
-
-    public LocalDateTime getBeginTime() {
-        return beginTime;
-    }
-
-    public void setBeginTime(LocalDateTime beginTime) {
-        this.beginTime = beginTime;
-    }
-
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(LocalDateTime endTime) {
-        this.endTime = endTime;
-    }
-
-    public double getDuration() {
-        return duration;
-    }
-
-    public void setDuration(double duration) {
-        this.duration = duration;
     }
 
     public String getIp() {
@@ -77,11 +43,35 @@ public class LoginLog extends AbstractEntity {
         this.userAgent = userAgent;
     }
 
-    public String getStatusCode() {
-        return statusCode;
+    public boolean isSuccess() {
+        return success;
     }
 
-    public void setStatusCode(String statusCode) {
-        this.statusCode = statusCode;
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+
+    public String getDeviceInfo() {
+        return deviceInfo;
+    }
+
+    public void setDeviceInfo(String deviceInfo) {
+        this.deviceInfo = deviceInfo;
+    }
+
+    public String getAdditionalInfo() {
+        return additionalInfo;
+    }
+
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
+    }
+
+    public LocalDateTime getLoginTime() {
+        return loginTime;
+    }
+
+    public void setLoginTime(LocalDateTime loginTime) {
+        this.loginTime = loginTime;
     }
 }

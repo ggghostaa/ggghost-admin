@@ -10,6 +10,7 @@ import java.time.Duration;
  */
 public class RedisConstant {
     public static final String LOCK = "G_LOCK_";
+    public static final String LOCK_LOGIN_LOG = "G_LOCK_LOGIN_LOG";
     public static final String USER = "G_USER_";
     public static final String JWT = "G_JWT_";
     public static final String JWT_USER = "G_JWT_USER_";

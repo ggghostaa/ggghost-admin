@@ -17,16 +17,14 @@ public class SysUser extends AbstractEntity {
     private String username;//用户名
     @Column(length = 100)
     private String password;//密码
-    @Column(length = 20)
-    private String salt;//salt
     @Column(length = 50)
     private String email;//邮箱
     @Column(length = 30)
     private String realName;//别称
     @Column(length = 30)
     private String phone;//手机
-    @Column(length = 1, nullable = false)
-    private String status;//状态
+    @Column(nullable = false)
+    private int status;//状态 0 禁用 | 1 启用
     private String remark;//备注
     private Date createTime;//创建时间
     private Date updateTime;//更新时间
@@ -93,14 +91,6 @@ public class SysUser extends AbstractEntity {
         this.password = password;
     }
 
-    public String getSalt() {
-        return salt;
-    }
-
-    public void setSalt(String salt) {
-        this.salt = salt;
-    }
-
     public String getEmail() {
         return email;
     }
@@ -117,11 +107,11 @@ public class SysUser extends AbstractEntity {
         this.phone = phone;
     }
 
-    public String getStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 
@@ -138,7 +128,6 @@ public class SysUser extends AbstractEntity {
         return "SysUser{" +
                 "username='" + username + '\'' +
                 ", password='" + password + '\'' +
-                ", salt='" + salt + '\'' +
                 ", email='" + email + '\'' +
                 ", realName='" + realName + '\'' +
                 ", phone='" + phone + '\'' +

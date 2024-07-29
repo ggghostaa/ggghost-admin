@@ -10,7 +10,7 @@ public enum HttpStatusCode {
     // 信息性状态码
     CONTINUE(100, "继续"),
     // 成功状态码
-    OK(200, "成功"),
+    OK(200, "请求成功"),
     CREATED(201, "已创建"),
     ACCEPTED(202, "已接受"),
     NO_CONTENT(204, "无内容"),

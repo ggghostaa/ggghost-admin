@@ -26,9 +26,12 @@ public class JwtUtils {
 
     private String SECRET = "Bzv9J88NUdgwAvKWi6s9h3ZbrXfd9D";
 
-    public static long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
+//    public static long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
+//
+//    public static long REFRESH_TIME = 1000 * 30 * 60 * 12;
+    public static long EXPIRATION_TIME = 1000 * 60 * 30;
 
-    public static long REFRESH_TIME = 1000 * 30 * 60 * 12;
+    public static long REFRESH_TIME = 1000 * 60 * 5;
 
     private static final String issuer = "ggghost";
     public static final String X_TOKEN = "X-Token";
