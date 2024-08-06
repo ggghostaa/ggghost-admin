@@ -1,9 +1,10 @@
 package com.ggghost.framework;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.ggghost.framework.repository.view.FileViewRepository;
 import com.ggghost.framework.service.impl.RedisService;
 import com.ggghost.framework.utlis.JwtUtils;
-import com.ggghost.framework.utlis.bcrypt.BCryptPasswordEncoder;
+import com.ggghost.framework.view.SysFileView;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.crypto.hash.SimpleHash;
@@ -13,17 +14,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.List;
+
 @SpringBootTest
 class GgghostAdminJavaApplicationTests {
     @Autowired
     RedisService redisService;
     @Autowired
     JwtUtils jwtUtils;
+    @Autowired
+    FileViewRepository fileViewRepository;
 
     @Test
     void lock() {
-        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        System.out.println(bCryptPasswordEncoder.encode("123456"));
+        List<SysFileView> all = fileViewRepository.findAll();
+        System.out.println(all);
     }
 
     @Test
